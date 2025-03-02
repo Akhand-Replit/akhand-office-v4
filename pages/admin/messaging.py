@@ -1,6 +1,8 @@
 import streamlit as st
 import datetime
-from database.models import MessageModel, CompanyModel
+# Fix imports to reference specific model files directly
+from database.models.message_model import MessageModel
+from database.models.company_model import CompanyModel
 
 def manage_messages(engine):
     """Admin message management - send and view messages to/from companies.
