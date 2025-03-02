@@ -1,6 +1,8 @@
 import streamlit as st
 from sqlalchemy import text
-from database.models import CompanyModel, BranchModel
+# Import directly from model files instead of from the models module
+from database.models.company_model import CompanyModel
+from database.models.branch_model import BranchModel
 
 def manage_companies(engine):
     """Manage companies - listing, adding, activating/deactivating.
