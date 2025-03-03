@@ -1,15 +1,10 @@
 import streamlit as st
 import datetime
-# Fix imports to reference specific model files directly
 from database.models.message_model import MessageModel
 from database.models.company_model import CompanyModel
 
 def manage_messages(engine):
-    """Admin message management - send and view messages to/from companies.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Admin message management - send and view messages to/from companies."""
     st.markdown('<h2 class="sub-header">Company Messages</h2>', unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["View Messages", "Send New Message"])
@@ -21,11 +16,7 @@ def manage_messages(engine):
         send_message(engine)
 
 def view_messages(engine):
-    """View messages from companies.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """View messages from companies."""
     # Fetch all messages for admin
     with engine.connect() as conn:
         messages = MessageModel.get_messages_for_admin(conn)
@@ -76,11 +67,7 @@ def view_messages(engine):
                             st.rerun()
 
 def send_message(engine):
-    """Send a message to a company.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Send a message to a company."""
     # Get active companies for recipient selection
     with engine.connect() as conn:
         companies = CompanyModel.get_active_companies(conn)
