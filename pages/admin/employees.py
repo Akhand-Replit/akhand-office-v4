@@ -1,13 +1,9 @@
 import streamlit as st
 from sqlalchemy import text
-from database.models import EmployeeModel
+from database.models.employee_model import EmployeeModel
 
 def manage_employees(engine):
-    """Manage employees - listing, adding, activating/deactivating.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Manage employees - listing, adding, activating/deactivating."""
     st.markdown('<h2 class="sub-header">Manage Employees</h2>', unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["Employee List", "Add New Employee"])
@@ -19,11 +15,7 @@ def manage_employees(engine):
         add_new_employee(engine)
 
 def display_employee_list(engine):
-    """Display the list of employees with management options.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Display the list of employees with management options."""
     # Fetch and display all employees
     with engine.connect() as conn:
         employees = EmployeeModel.get_all_employees(conn)
@@ -72,11 +64,7 @@ def display_employee_list(engine):
                             st.success(f"Password reset to '{new_password}' for {employee[2]}")
 
 def add_new_employee(engine):
-    """Form to add a new employee.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Form to add a new employee."""
     # Form to add new employee
     with st.form("add_employee_form"):
         username = st.text_input("Username", help="Username for employee login")
