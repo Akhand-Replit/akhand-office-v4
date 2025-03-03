@@ -1,19 +1,3 @@
-import streamlit as st
-from sqlalchemy import create_engine, text
-
-@st.cache_resource
-def init_connection():
-    """Initialize database connection with caching.
-    
-    Returns:
-        SQLAlchemy engine or None if connection fails
-    """
-    try:
-        return create_engine(st.secrets["postgres"]["url"])
-    except Exception as e:
-        st.error(f"Database connection error: {e}")
-        return None
-
 def init_db(engine):
     """Initialize database tables if they don't exist.
     
@@ -21,6 +5,7 @@ def init_db(engine):
         engine: SQLAlchemy database engine
     """
     with engine.connect() as conn:
+        # Create base tables first
         conn.execute(text('''
         -- Companies table
         CREATE TABLE IF NOT EXISTS companies (
@@ -68,7 +53,11 @@ def init_db(engine):
             is_read BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        '''))
+        conn.commit()
         
+        # Create employees table
+        conn.execute(text('''
         -- Employees table (now with roles)
         CREATE TABLE IF NOT EXISTS employees (
             id SERIAL PRIMARY KEY,
@@ -81,8 +70,12 @@ def init_db(engine):
             is_active BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        '''))
+        conn.commit()
         
-        -- Tasks table (without the foreign key constraint for completed_by_id initially)
+        # Create tasks table without the foreign key constraint
+        conn.execute(text('''
+        -- Tasks table
         CREATE TABLE IF NOT EXISTS tasks (
             id SERIAL PRIMARY KEY,
             company_id INTEGER REFERENCES companies(id),
@@ -91,28 +84,27 @@ def init_db(engine):
             task_description TEXT NOT NULL,
             due_date DATE,
             is_completed BOOLEAN DEFAULT FALSE,
-            completed_by_id INTEGER,  -- No constraint initially
+            completed_by_id INTEGER,
             completed_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        '''))
+        conn.commit()
         
-        -- Now add the foreign key constraint separately
-        DO $$
-        BEGIN
-            -- Check if the column and constraint exist before trying to add them
-            IF EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'tasks' AND column_name = 'completed_by_id'
-            ) AND NOT EXISTS (
-                SELECT 1 FROM information_schema.table_constraints
-                WHERE constraint_name = 'tasks_completed_by_id_fkey'
-            ) THEN
-                ALTER TABLE tasks 
-                ADD CONSTRAINT tasks_completed_by_id_fkey 
-                FOREIGN KEY (completed_by_id) REFERENCES employees(id);
-            END IF;
-        END $$;
+        # Attempt to add the foreign key constraint
+        try:
+            conn.execute(text('''
+            ALTER TABLE tasks 
+            ADD CONSTRAINT tasks_completed_by_id_fkey 
+            FOREIGN KEY (completed_by_id) REFERENCES employees(id);
+            '''))
+            conn.commit()
+        except Exception:
+            # If the constraint already exists or can't be added, just continue
+            pass
         
+        # Create remaining tables
+        conn.execute(text('''
         -- Task Assignments for tracking branch-level task completions
         CREATE TABLE IF NOT EXISTS task_assignments (
             id SERIAL PRIMARY KEY,
@@ -124,7 +116,7 @@ def init_db(engine):
             UNIQUE(task_id, employee_id)
         );
         
-        -- Daily reports table (unchanged)
+        -- Daily reports table
         CREATE TABLE IF NOT EXISTS daily_reports (
             id SERIAL PRIMARY KEY,
             employee_id INTEGER REFERENCES employees(id),
@@ -132,7 +124,11 @@ def init_db(engine):
             report_text TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        '''))
+        conn.commit()
         
+        # Insert default roles
+        conn.execute(text('''
         -- Insert default employee roles if they don't exist
         INSERT INTO employee_roles (role_name, role_level, company_id)
         SELECT 'Manager', 1, id FROM companies
