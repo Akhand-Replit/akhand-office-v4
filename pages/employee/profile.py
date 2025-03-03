@@ -3,7 +3,11 @@ import time
 from database.models.employee_model import EmployeeModel
 
 def edit_my_profile(engine):
-    """Edit personal profile information."""
+    """Edit personal profile information.
+    
+    Args:
+        engine: SQLAlchemy database engine
+    """
     st.markdown('<h2 class="sub-header">My Profile</h2>', unsafe_allow_html=True)
     
     employee_id = st.session_state.user["id"]
@@ -79,7 +83,7 @@ def edit_my_profile(engine):
                     if not is_valid:
                         st.error("Current password is incorrect.")
                     else:
-                        # Update password - using reset_password instead of update_password
+                        # Update password - Fixed method name from update_password to reset_password
                         with engine.connect() as conn:
                             EmployeeModel.reset_password(conn, employee_id, new_password)
                         
