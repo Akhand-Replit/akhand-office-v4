@@ -1,13 +1,9 @@
 import streamlit as st
-from database.models import TaskModel
+from database.models.task_model import TaskModel
 from utils.helpers import format_timestamp
 
 def view_my_tasks(engine):
-    """View and manage personal tasks.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """View and manage personal tasks."""
     st.markdown('<h2 class="sub-header">My Tasks</h2>', unsafe_allow_html=True)
     
     employee_id = st.session_state.user["id"]
