@@ -13,11 +13,7 @@ from utils.auth import logout
 from utils.helpers import calculate_completion_rate
 
 def admin_dashboard(engine):
-    """Display the admin dashboard.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Display the admin dashboard."""
     st.markdown('<h1 class="main-header">Admin Dashboard</h1>', unsafe_allow_html=True)
     
     # Display admin profile
@@ -42,11 +38,7 @@ def admin_dashboard(engine):
         logout()
 
 def admin_navigation():
-    """Create and return the admin navigation menu with new options.
-    
-    Returns:
-        str: Selected menu option
-    """
+    """Create and return the admin navigation menu with new options."""
     return st.sidebar.radio(
         "Navigation",
         ["Dashboard", "Companies", "Messages", "Employees", "Reports", "Tasks", "Logout"],
@@ -54,11 +46,7 @@ def admin_navigation():
     )
 
 def display_admin_dashboard_overview(engine):
-    """Display the admin dashboard overview with statistics and recent activities.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Display the admin dashboard overview with statistics and recent activities."""
     st.markdown('<h2 class="sub-header">Overview</h2>', unsafe_allow_html=True)
     
     # Statistics
