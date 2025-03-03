@@ -1,15 +1,11 @@
 import streamlit as st
 from sqlalchemy import text
-# Import directly from model files instead of from the models module
+# Use direct imports from model files
 from database.models.company_model import CompanyModel
 from database.models.branch_model import BranchModel
 
 def manage_companies(engine):
-    """Manage companies - listing, adding, activating/deactivating.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Manage companies - listing, adding, activating/deactivating."""
     st.markdown('<h2 class="sub-header">Manage Companies</h2>', unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["Company List", "Add New Company"])
@@ -21,11 +17,7 @@ def manage_companies(engine):
         add_new_company(engine)
 
 def display_company_list(engine):
-    """Display the list of companies with management options.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Display the list of companies with management options."""
     # Fetch and display all companies
     with engine.connect() as conn:
         companies = CompanyModel.get_all_companies(conn)
@@ -92,13 +84,7 @@ def display_company_list(engine):
                     display_company_branches(engine, company_id, st.session_state.view_company_name)
 
 def display_company_branches(engine, company_id, company_name):
-    """Display branches for a specific company.
-    
-    Args:
-        engine: SQLAlchemy database engine
-        company_id: ID of the company
-        company_name: Name of the company for display
-    """
+    """Display branches for a specific company."""
     st.markdown(f'<h3 class="sub-header">Branches for {company_name}</h3>', unsafe_allow_html=True)
     
     # Fetch branches for this company
@@ -133,11 +119,7 @@ def display_company_branches(engine, company_id, company_name):
         st.rerun()
 
 def add_new_company(engine):
-    """Form to add a new company.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Form to add a new company."""
     # Form to add new company
     with st.form("add_company_form"):
         company_name = st.text_input("Company Name", help="Name of the company")
