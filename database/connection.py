@@ -42,37 +42,60 @@ def init_db(engine):
                 st.error(f"Error creating companies table: {e}")
                 raise
             
-            # Branches table - Create first without self-referencing foreign key
+            # Create branches table - simple version without self-reference
             try:
-                conn.execute(text('''
-                CREATE TABLE IF NOT EXISTS branches (
-                    id SERIAL PRIMARY KEY,
-                    company_id INTEGER REFERENCES companies(id),
-                    parent_branch_id INTEGER NULL,
-                    branch_name VARCHAR(100) NOT NULL,
-                    is_main_branch BOOLEAN DEFAULT FALSE,
-                    location VARCHAR(255),
-                    branch_head VARCHAR(100),
-                    is_active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(company_id, branch_name)
+                # First check if table exists
+                result = conn.execute(text('''
+                SELECT EXISTS (
+                   SELECT FROM information_schema.tables 
+                   WHERE table_name = 'branches'
                 )
                 '''))
-                conn.commit()
-            except Exception as e:
-                st.error(f"Error creating branches table: {e}")
-                raise
-            
-            # Now add the self-referencing foreign key to branches table if it doesn't exist
-            try:
-                # Check if constraint already exists before adding it
+                table_exists = result.scalar()
+                
+                if not table_exists:
+                    # Create the table without foreign key constraint
+                    conn.execute(text('''
+                    CREATE TABLE branches (
+                        id SERIAL PRIMARY KEY,
+                        company_id INTEGER REFERENCES companies(id),
+                        parent_branch_id INTEGER,
+                        branch_name VARCHAR(100) NOT NULL,
+                        is_main_branch BOOLEAN DEFAULT FALSE,
+                        location VARCHAR(255),
+                        branch_head VARCHAR(100),
+                        is_active BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(company_id, branch_name)
+                    )
+                    '''))
+                    conn.commit()
+                
+                # Check if parent_branch_id column exists
                 result = conn.execute(text('''
-                SELECT 1 FROM pg_constraint 
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_name = 'branches' AND column_name = 'parent_branch_id'
+                )
+                '''))
+                column_exists = result.scalar()
+                
+                if not column_exists:
+                    # Add the column if it doesn't exist
+                    conn.execute(text('''
+                    ALTER TABLE branches ADD COLUMN parent_branch_id INTEGER
+                    '''))
+                    conn.commit()
+                
+                # Check if constraint already exists
+                result = conn.execute(text('''
+                SELECT COUNT(*) FROM pg_constraint 
                 WHERE conname = 'branches_parent_branch_id_fkey'
                 '''))
+                constraint_exists = result.scalar() > 0
                 
-                # If constraint doesn't exist, add it
-                if not result.fetchone():
+                if not constraint_exists:
+                    # Add the self-referencing foreign key
                     conn.execute(text('''
                     ALTER TABLE branches 
                     ADD CONSTRAINT branches_parent_branch_id_fkey 
@@ -81,8 +104,8 @@ def init_db(engine):
                     '''))
                     conn.commit()
             except Exception as e:
-                st.warning(f"Note: Could not add parent branch self-reference constraint: {e}")
-                # Continue execution - this is not critical
+                st.warning(f"Note: Issue with branches table setup: {e}")
+                # Continue execution rather than stopping the app
             
             # Employee Roles table
             try:
@@ -165,12 +188,13 @@ def init_db(engine):
             try:
                 # Check if constraint already exists
                 result = conn.execute(text('''
-                SELECT 1 FROM pg_constraint 
+                SELECT COUNT(*) FROM pg_constraint 
                 WHERE conname = 'tasks_completed_by_id_fkey'
                 '''))
+                constraint_exists = result.scalar() > 0
                 
                 # If constraint doesn't exist, add it
-                if not result.fetchone():
+                if not constraint_exists:
                     conn.execute(text('''
                     ALTER TABLE tasks 
                     ADD CONSTRAINT tasks_completed_by_id_fkey 
