@@ -1,14 +1,10 @@
 import streamlit as st
 import datetime
-from database.models import ReportModel
+from database.models.report_model import ReportModel
 from utils.helpers import get_date_range_from_filter
 
 def submit_report(engine):
-    """Form for employee to submit daily reports.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Form for employee to submit daily reports."""
     st.markdown('<h2 class="sub-header">Submit Daily Report</h2>', unsafe_allow_html=True)
     
     employee_id = st.session_state.user["id"]
@@ -46,11 +42,7 @@ def submit_report(engine):
                     st.error(f"Error submitting report: {e}")
 
 def view_my_reports(engine):
-    """View and manage personal reports.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """View and manage personal reports."""
     st.markdown('<h2 class="sub-header">My Reports</h2>', unsafe_allow_html=True)
     
     employee_id = st.session_state.user["id"]
