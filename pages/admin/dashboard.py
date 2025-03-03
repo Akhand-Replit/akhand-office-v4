@@ -6,9 +6,6 @@ from pages.common.components import (
 )
 from pages.admin.companies import manage_companies
 from pages.admin.messaging import manage_messages
-from pages.admin.employees import manage_employees
-from pages.admin.reports import view_all_reports
-from pages.admin.tasks import manage_tasks
 from utils.auth import logout
 from utils.helpers import calculate_completion_rate
 
@@ -19,7 +16,7 @@ def admin_dashboard(engine):
     # Display admin profile
     display_profile_header(st.session_state.user)
     
-    # Navigation - Updated with Companies and Messages
+    # Navigation - Only include Companies, Messages, and Logout
     selected = admin_navigation()
     
     if selected == "Dashboard":
@@ -28,20 +25,14 @@ def admin_dashboard(engine):
         manage_companies(engine)
     elif selected == "Messages":
         manage_messages(engine)
-    elif selected == "Employees":
-        manage_employees(engine)
-    elif selected == "Reports":
-        view_all_reports(engine)
-    elif selected == "Tasks":
-        manage_tasks(engine)
     elif selected == "Logout":
         logout()
 
 def admin_navigation():
-    """Create and return the admin navigation menu with new options."""
+    """Create and return the admin navigation menu with reduced options."""
     return st.sidebar.radio(
         "Navigation",
-        ["Dashboard", "Companies", "Messages", "Employees", "Reports", "Tasks", "Logout"],
+        ["Dashboard", "Companies", "Messages", "Logout"],
         index=0
     )
 
@@ -62,18 +53,6 @@ def display_admin_dashboard_overview(engine):
         # Total employees
         result = conn.execute(text('SELECT COUNT(*) FROM employees WHERE is_active = TRUE'))
         total_employees = result.fetchone()[0]
-        
-        # Total reports
-        result = conn.execute(text('SELECT COUNT(*) FROM daily_reports'))
-        total_reports = result.fetchone()[0]
-        
-        # Total tasks
-        result = conn.execute(text('SELECT COUNT(*) FROM tasks'))
-        total_tasks = result.fetchone()[0]
-        
-        # Completed tasks
-        result = conn.execute(text('SELECT COUNT(*) FROM tasks WHERE is_completed = TRUE'))
-        completed_tasks = result.fetchone()[0]
         
         # Unread messages
         result = conn.execute(text('''
@@ -117,19 +96,6 @@ def display_admin_dashboard_overview(engine):
     
     with col4:
         display_stats_card(unread_messages, "Unread Messages")
-    
-    # Second row of stats
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        display_stats_card(total_reports, "Total Reports")
-    
-    with col2:
-        display_stats_card(total_tasks, "Total Tasks")
-    
-    with col3:
-        completion_rate = calculate_completion_rate(total_tasks, completed_tasks)
-        display_stats_card(f"{completion_rate}%", "Task Completion")
     
     # Recent activities
     col1, col2 = st.columns(2)
