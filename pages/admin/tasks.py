@@ -1,14 +1,11 @@
 import streamlit as st
 import datetime
-from database.models import TaskModel, EmployeeModel
+from database.models.task_model import TaskModel
+from database.models.employee_model import EmployeeModel
 from utils.helpers import format_timestamp
 
 def manage_tasks(engine):
-    """View and manage all employee tasks.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """View and manage all employee tasks."""
     st.markdown('<h2 class="sub-header">Manage Tasks</h2>', unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["View Tasks", "Assign New Task"])
@@ -20,11 +17,7 @@ def manage_tasks(engine):
         assign_new_task(engine)
 
 def view_tasks(engine):
-    """View and filter tasks.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """View and filter tasks."""
     # Filters
     col1, col2 = st.columns(2)
     
@@ -98,11 +91,7 @@ def view_tasks(engine):
                     st.rerun()
 
 def assign_new_task(engine):
-    """Form to assign a new task to an employee.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Form to assign a new task to an employee."""
     # Form to assign new task
     with st.form("assign_task_form"):
         # Employee selection
