@@ -42,13 +42,13 @@ def init_db(engine):
                 st.error(f"Error creating companies table: {e}")
                 raise
             
-            # Branches table
+            # Branches table - Create first without self-referencing foreign key
             try:
                 conn.execute(text('''
                 CREATE TABLE IF NOT EXISTS branches (
                     id SERIAL PRIMARY KEY,
                     company_id INTEGER REFERENCES companies(id),
-                    parent_branch_id INTEGER,
+                    parent_branch_id INTEGER NULL,
                     branch_name VARCHAR(100) NOT NULL,
                     is_main_branch BOOLEAN DEFAULT FALSE,
                     location VARCHAR(255),
@@ -59,25 +59,30 @@ def init_db(engine):
                 )
                 '''))
                 conn.commit()
-                
-                # Add foreign key constraint as a separate statement
-                conn.execute(text('''
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1 FROM pg_constraint WHERE conname = 'branches_parent_branch_id_fkey'
-                    ) THEN
-                        ALTER TABLE branches 
-                        ADD CONSTRAINT branches_parent_branch_id_fkey 
-                        FOREIGN KEY (parent_branch_id) REFERENCES branches(id);
-                    END IF;
-                END
-                $$;
-                '''))
-                conn.commit()
             except Exception as e:
                 st.error(f"Error creating branches table: {e}")
                 raise
+            
+            # Now add the self-referencing foreign key to branches table if it doesn't exist
+            try:
+                # Check if constraint already exists before adding it
+                result = conn.execute(text('''
+                SELECT 1 FROM pg_constraint 
+                WHERE conname = 'branches_parent_branch_id_fkey'
+                '''))
+                
+                # If constraint doesn't exist, add it
+                if not result.fetchone():
+                    conn.execute(text('''
+                    ALTER TABLE branches 
+                    ADD CONSTRAINT branches_parent_branch_id_fkey 
+                    FOREIGN KEY (parent_branch_id) 
+                    REFERENCES branches(id)
+                    '''))
+                    conn.commit()
+            except Exception as e:
+                st.warning(f"Note: Could not add parent branch self-reference constraint: {e}")
+                # Continue execution - this is not critical
             
             # Employee Roles table
             try:
@@ -152,25 +157,30 @@ def init_db(engine):
                 )
                 '''))
                 conn.commit()
-                
-                # Add foreign key constraint for completed_by_id as a separate statement
-                conn.execute(text('''
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1 FROM pg_constraint WHERE conname = 'tasks_completed_by_id_fkey'
-                    ) THEN
-                        ALTER TABLE tasks 
-                        ADD CONSTRAINT tasks_completed_by_id_fkey 
-                        FOREIGN KEY (completed_by_id) REFERENCES employees(id);
-                    END IF;
-                END
-                $$;
-                '''))
-                conn.commit()
             except Exception as e:
                 st.error(f"Error creating tasks table: {e}")
                 raise
+            
+            # Add foreign key for completed_by_id if it doesn't exist
+            try:
+                # Check if constraint already exists
+                result = conn.execute(text('''
+                SELECT 1 FROM pg_constraint 
+                WHERE conname = 'tasks_completed_by_id_fkey'
+                '''))
+                
+                # If constraint doesn't exist, add it
+                if not result.fetchone():
+                    conn.execute(text('''
+                    ALTER TABLE tasks 
+                    ADD CONSTRAINT tasks_completed_by_id_fkey 
+                    FOREIGN KEY (completed_by_id) 
+                    REFERENCES employees(id)
+                    '''))
+                    conn.commit()
+            except Exception as e:
+                st.warning(f"Note: Could not add completed_by_id constraint to tasks: {e}")
+                # Continue execution - this is not critical
             
             # Task Assignments table
             try:
