@@ -1,15 +1,12 @@
 import streamlit as st
 import datetime
-from database.models import ReportModel, EmployeeModel
+from database.models.report_model import ReportModel
+from database.models.employee_model import EmployeeModel
 from utils.pdf_generator import create_employee_report_pdf
 from utils.helpers import get_date_range_from_filter
 
 def view_all_reports(engine):
-    """Display and manage all employee reports.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Display and manage all employee reports."""
     st.markdown('<h2 class="sub-header">Employee Reports</h2>', unsafe_allow_html=True)
     
     # Filters
