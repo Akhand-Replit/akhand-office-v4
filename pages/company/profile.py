@@ -1,13 +1,9 @@
 import streamlit as st
 import time
-from database.models import CompanyModel
+from database.models.company_model import CompanyModel
 
 def edit_profile(engine):
-    """Edit company profile information.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """Edit company profile information."""
     st.markdown('<h2 class="sub-header">Company Profile</h2>', unsafe_allow_html=True)
     
     company_id = st.session_state.user["id"]
