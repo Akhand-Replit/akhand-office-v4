@@ -1,13 +1,9 @@
 import streamlit as st
 import datetime
-from database.models import MessageModel
+from database.models.message_model import MessageModel
 
 def view_messages(engine):
-    """View and send messages between company and admin.
-    
-    Args:
-        engine: SQLAlchemy database engine
-    """
+    """View and send messages between company and admin."""
     st.markdown('<h2 class="sub-header">Admin Messages</h2>', unsafe_allow_html=True)
     
     company_id = st.session_state.user["id"]
@@ -24,12 +20,7 @@ def view_messages(engine):
         send_message_form(engine, company_id)
 
 def display_message_history(engine, company_id):
-    """Display message history between company and admin.
-    
-    Args:
-        engine: SQLAlchemy database engine
-        company_id: ID of the current company
-    """
+    """Display message history between company and admin."""
     st.subheader("Message History")
     
     # Fetch all messages for this company
@@ -74,12 +65,7 @@ def display_message_history(engine, company_id):
             ''', unsafe_allow_html=True)
 
 def send_message_form(engine, company_id):
-    """Form to send a new message to admin.
-    
-    Args:
-        engine: SQLAlchemy database engine
-        company_id: ID of the current company
-    """
+    """Form to send a new message to admin."""
     st.subheader("Send Message")
     
     with st.form("send_message_form"):
